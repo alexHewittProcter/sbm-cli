@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/alexHewittProcter/sbm-cli/pkg/printer"
 )
 
 // searchCmd represents the search command
@@ -56,7 +57,7 @@ var searchCmd = &cobra.Command{
 }
 
 func printFoundPackage(name string, path string, foundPackage string, packageVersion string) {
-	fmt.Printf("%-30s %-40s %-10s %s \n", name, foundPackage, packageVersion, path)
+	fmt.Printf("%-30s %-40s %-10s %s \n", printer.FormatBold(name), printer.FormatGreen(foundPackage), printer.FormatYellow((packageVersion)), printer.FormatUnderline(path))
 	// fmt.Println(v)
 }
 
