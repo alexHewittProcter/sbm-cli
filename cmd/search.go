@@ -17,8 +17,8 @@ import (
 var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Searches Node.js projects",
-	Long: `This command searches Node.js projects for a specific package provided by the user.`,
-	Run: func(cmd *cobra.Command, args []string) {	
+	Long:  `This command searches Node.js projects for a specific package provided by the user.`,
+	Run: func(cmd *cobra.Command, args []string) {
 		partialSearch, err := cmd.Flags().GetBool("partial")
 		if err != nil {
 			fmt.Println("Error:", err)
@@ -31,8 +31,8 @@ var searchCmd = &cobra.Command{
 			fmt.Println("Please provide a package to search")
 			return
 		}
-	
-		packageJSON,err := getPackageJsons(".")
+
+		packageJSON, err := getPackageJsons(".")
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -44,72 +44,78 @@ var searchCmd = &cobra.Command{
 				fmt.Println("Error:", err)
 			}
 
-			for key,val := range deps {
+			for key, val := range deps {
 				// fmt.Println(key)
-				if(key == packageToSearch || partialSearch && strings.Contains(key,packageToSearch)) {
-					printFoundPackage(name,strings.Replace(jsonPath,"../","",-1), key,val)
+				if key == packageToSearch || partialSearch && strings.Contains(key, packageToSearch) {
+					printFoundPackage(name, strings.Replace(jsonPath, "../", "", -1), key, val)
 				}
 			}
 		}
-		
+
 	},
 }
 
 func printFoundPackage(name string, path string, foundPackage string, packageVersion string) {
-	v := fmt.Sprintf("%s - %s:%s - %s", name, foundPackage, packageVersion, path)
-	fmt.Println(v)
+	fmt.Printf("%-30s %-40s %-10s %s \n", name, foundPackage, packageVersion, path)
+	// fmt.Println(v)
 }
 
 func getPackageJsons(path string) ([]string, error) {
 	var packages []string
-	err:= filepath.Walk(path, func(currentPath string, info os.FileInfo, err error) error {
+	var count = 0
+	err := filepath.Walk(path, func(currentPath string, info os.FileInfo, err error) error {
+		dirsToIgnore := []string{".", "node_modules", "vendor", "Applications", "Creative Cloud Files", "Pictures", "Images", "Downloads", "Library", "Postman", "Movies", "Music", "go"}
+		for _, dirToTest := range dirsToIgnore {
+			if strings.HasPrefix(currentPath, dirToTest) {
+				return nil
+			}
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if info.Name() == "node_modules" {
+		if info.Name() == "node_modules" || info.Name() == "vendor" {
 			return filepath.SkipDir
 		}
 
 		if info.Name() == "package.json" {
 			packages = append(packages, currentPath)
 		}
-
+		count++
 		return nil
 	})
-	
 
-	return packages,err
+	return packages, err
 }
 
 type NodeJson struct {
-    Dependencies   map[string]string `json:"dependencies"`
-    DevDependencies   map[string]string `json:"devDependencies"`
-	Name string `json:"name"`
+	Dependencies    map[string]string `json:"dependencies"`
+	DevDependencies map[string]string `json:"devDependencies"`
+	Name            string            `json:"name"`
 }
 
-
-func getDependencies(path string) (map[string]string, string, error) {
-	file,err := os.ReadFile(path)
+func getDependencies(path string) (dependencies map[string]string, name string, err error) {
+	file, err := os.ReadFile(path)
 	if err != nil {
-		return nil,"",err
+		return nil, "", err
 	}
 
-	var data NodeJson 
+	var data NodeJson
 
-	err = json.Unmarshal([]byte(file),&data)
+	err = json.Unmarshal([]byte(file), &data)
 	if err != nil {
-		return nil,"",err
+		return nil, "", err
 	}
-
-	dependencies := data.Dependencies
+	name = data.Name
+	dependencies = data.Dependencies
 	devDependencies := data.DevDependencies
 
-	if dependencies == nil{
+	if dependencies == nil {
 		if devDependencies == nil {
-			 return map[string]string{},"",nil
+			return map[string]string{}, "", nil
 		} else {
-			return devDependencies,"",nil
+			return devDependencies, "", nil
 		}
 	}
 
@@ -117,7 +123,7 @@ func getDependencies(path string) (map[string]string, string, error) {
 		dependencies[k] = v
 	}
 
-	return dependencies,data.Name, nil
+	return dependencies, name, nil
 }
 
 func init() {

@@ -11,9 +11,9 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "sbm",
+	Use:   "sbm-cli",
 	Short: "A golang cli tool to power engineers",
-	Long: `A tool to power engineers with quick commands for certain tasks`,
+	Long:  `A tool to power engineers with quick commands for certain tasks`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -39,5 +39,3 @@ func init() {
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
